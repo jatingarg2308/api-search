@@ -1,0 +1,25 @@
+youtube_url: 'https://www.googleapis.com/youtube/v3/search'
+
+search_query:
+- football
+- cricket
+
+db_name: assignment
+table_name: youtube
+
+col_metadata:
+- name: video_id
+  dtype: VARCHAR(255)
+  primary_key: true
+- name: title
+  dtype: VARCHAR(255)
+  primary_key: false
+- name: description
+  dtype: VARCHAR(1023)
+  primary_key: false
+- name: publish_time 
+  dtype: DATE
+  primary_key: false
+- name: thumbnails
+  dtype: VARCHAR(1023)
+  primary_key: false
