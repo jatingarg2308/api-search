@@ -9,7 +9,7 @@ metadata = get_metadata()
 
 def get_connection():
     return psycopg2.connect(
-        host='localhost',
+        host='172.17.0.1',
         port=5432,
         database = metadata['db_name'],
         user="postgres",
@@ -22,7 +22,7 @@ def create_database():
     conn = psycopg2.connect(
         user='postgres',
         password='password1',
-        host='localhost',
+        host='172.17.0.1',
         port=5432
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
