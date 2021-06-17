@@ -1,11 +1,11 @@
 import arrow
-import re
 import requests
+import json
 import pandas as pd
 
 from flask import Flask, request, abort, jsonify
 
-from table import ingestion, get_df
+from table import ingestion, get_df, create_database, create_table
 from metadata import get_metadata
 
 
@@ -55,14 +55,12 @@ def search(x, search):
 
 def get_data():
     params = {
-        'search': ';',
+        'search': 'football',
         'page_number': 1,
         'results_per_page': 5
     }
     start_idx = params['results_per_page'] * (params['page_number'] - 1)
     end_idx = start_idx + params['results_per_page']
-
-    params['search'] = re.sub("[^a-z0-9]", "", params['search'])
 
     final_df = get_df(params)
     
@@ -70,13 +68,15 @@ def get_data():
         "status_code": 200,
         "start_idx": start_idx,
         'end_idx': end_idx,
-        'data': jsonify(final_df.to_json(orient="records"))
+        'data': json.loads(final_df.to_json(orient="records"))
     }
     return res
 
 
 if __name__ == '__main__':
-    # get_video_metadata()
+    create_database()
+    create_table()
+    get_video_metadata()
     res = get_data()
     import pdb; pdb.set_trace()
 

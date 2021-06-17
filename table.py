@@ -1,5 +1,6 @@
 import psycopg2
 import pandas as pd
+import re
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from metadata import get_metadata
@@ -8,7 +9,7 @@ metadata = get_metadata()
 
 def get_connection():
     return psycopg2.connect(
-        host='0.0.0.0',
+        host='localhost',
         port=5432,
         database = metadata['db_name'],
         user="postgres",
@@ -21,7 +22,7 @@ def create_database():
     conn = psycopg2.connect(
         user='postgres',
         password='password1',
-        host='0.0.0.0',
+        host='localhost',
         port=5432
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -29,7 +30,11 @@ def create_database():
     cursor = conn.cursor()
 
     sqlCreateDatabase = f"create database {metadata['db_name']};"
-    cursor.execute(sqlCreateDatabase)
+    try:
+        print(f"Creating Database {metadata['db_name']}")
+        cursor.execute(sqlCreateDatabase)
+    except:
+        print('Database already exists')
 
 def create_table_query():
     global metadata
@@ -43,6 +48,7 @@ def create_table_query():
         query += temp_query
     
     query = query[:-1]
+
     query += ");"
     return query
 
@@ -53,9 +59,12 @@ def create_table():
     cursor = conn.cursor()
     
     query = create_table_query()
-
-    cursor.execute(query)
-    conn.commit()
+    try:
+        print(f"Creating Table {metadata['table_name']}")
+        cursor.execute(query)
+        conn.commit()
+    except:
+        print('Table already exists')
     conn.close()
     cursor.close()
 
@@ -66,12 +75,21 @@ def ingestion(df):
 
     tup = [tuple(x) for x in df.to_numpy()]
     columns = ','.join(list(df.columns))
+    primary_col = []
+    for meta in metadata['col_metadata']:
+        if meta['primary_key']:
+            primary_col.append(meta['name'])
     
-    query  = f"INSERT INTO {metadata['table_name']}({columns}) VALUES (%s,%s,%s,%s,%s)"
+    primary = ','.join(primary_col)
+    excluded = [f"EXCLUDED.{col}" for col in df.columns]
+    exclude = ", ".join(excluded)
+    
+    query  = f"INSERT INTO {metadata['table_name']}({columns}) VALUES (%s,%s,%s,%s,%s) \
+                ON CONFLICT ({primary}) DO UPDATE SET ({columns}) = ({exclude});"
     cursor = conn.cursor()
     
     try:
-        import pdb; pdb.set_trace()
+        print('Ingestion Data')
         cursor.executemany(query, tup)
         conn.commit()
     except:
@@ -89,14 +107,15 @@ def create_search_query(params):
     temp_query = 'where '
     tup = []
     for val in search:
+        val = re.sub("[^a-z0-9]", "", val)
         if val != "":
-            temp_query += f"title like %s or description like %s or"
-            tup.extend([val, val])
+            temp_query += f"lower(title) like %s or lower(description) like %s or "
+            tup.extend([f"%{val.lower()}%", f"%{val.lower()}%"])
     
     if temp_query != 'where ':
-        query += temp_query[:-2] + f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1};"
+        query += temp_query[:-3] + f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1};"
     else:
-        query +=  f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1};"
+        query +=  f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1}"
     return query, tup
 
 def get_df(params):
@@ -105,13 +124,13 @@ def get_df(params):
     cursor = conn.cursor()
 
     query, tup = create_search_query(params)
-    
+    print('Fetching Data')
     if len(tup) >0:
         cursor.execute(query,(tup))
     else:
         cursor.execute(query)
     data = cursor.fetchall()
-
+    
     df = pd.DataFrame(columns =[col['name'] for col in metadata['col_metadata']], data=data)
     # import pdb; pdb.set_trace()
     return df
