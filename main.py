@@ -1,10 +1,12 @@
 import arrow
-import asyncio
 import requests
 import json
+import time
 import pandas as pd
 
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, jsonify
+from multiprocessing import Process
+
 
 from table import ingestion, get_df, create_database, create_table
 from metadata import get_metadata
@@ -13,7 +15,7 @@ app = Flask(__name__)
 meta = get_metadata()
 
 
-async def get_video_metadata():
+def get_video_metadata():
     global meta
     params = {
         "part" : 'snippet',
@@ -45,17 +47,12 @@ async def get_video_metadata():
             }
             df = df.append(data, ignore_index=True)
         
-        await ingestion(df)
+        ingestion(df)
 
-def search(x, search):
-    for i in range(len(x)):
-        x[i] = x[i].lower()
-        x[i] = re.sub("[^a-z0-9]", "", x[i])
-    for i in range(len(search)):
-        search[i] = search[i].lower()
-
-    common_words = set(x) & set(search)
-    return len(common_words) != 0
+def video_metadata_loop():
+    while True:
+        get_video_metadata()
+        time.sleep(10) 
 
 @app.route('/', methods=['GET'])
 def get_data():
@@ -73,27 +70,20 @@ def get_data():
         'data': json.loads(final_df.to_json(orient="records"))
     }
     return res
-
-def video_metadata_loop():
-    while True:
-        get_video_metadata()
-        time.sleep(100) 
-    return 'hello'
-
-async def main():
-    create_database()
-    create_table()
-
-    loop = asyncio.get_event_loop()
-    task1 = loop.create_task(video_metadata_loop)
-    task2 = loop.create_task(app.run(port=5000))
     
-    await task2
-    await task1
+
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    create_database()
+    create_table()
+    # get_video_metadata()
+    p = Process(target=video_metadata_loop, args= ()) 
+    p.start()
+    app.run(port=5000, use_reloader=False)
+    p.join()
+
+
+
     
     
 

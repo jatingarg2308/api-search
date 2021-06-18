@@ -115,7 +115,7 @@ def create_search_query(params):
     if temp_query != 'where ':
         query += temp_query[:-3] + f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1};"
     else:
-        query +=  f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1}"
+        query +=  f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {(params['page_number']-1)*params['results_per_page']}"
     return query, tup
 
 def get_df(params):
