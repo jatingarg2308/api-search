@@ -1,5 +1,10 @@
 youtube_url: 'https://www.googleapis.com/youtube/v3/search'
 
+youtube_keys:
+- XXXXX
+- YYYYY
+- ZZZZZ
+
 search_query:
 - football
 - cricket

@@ -13,17 +13,18 @@ from metadata import get_metadata
 
 app = Flask(__name__)
 meta = get_metadata()
+KEY_INDEX = 0
 
 
 def get_video_metadata():
-    global meta
+    global meta, KEY_INDEX
     params = {
         "part" : 'snippet',
         "type" : "video",
         "order": 'date',
         "q": "|".join(meta['search_query']),
         "publishedAfter": "2021-06-16T00:00:00Z",
-        "key": "AIzaSyB2hnV0MZJMZWTv1PUKZrpseHtKICLSo74",
+        "key": meta['youtube_keys'][KEY_INDEX],
         "maxResults": 10
     }
 
@@ -35,6 +36,7 @@ def get_video_metadata():
                 )
     if metadata_res.status_code > 200:
         print('All Units exhauted')
+        KEY_INDEX = (KEY_INDEX+1)%len(meta['youtube_keys'])
     else:
         df = pd.DataFrame(columns =[col['name'] for col in meta['col_metadata']])
         for metadata in metadata_res.json()['items']:
