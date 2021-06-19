@@ -24,12 +24,17 @@ To use the api-search:
 ```bash
 docker run --name=demo \
 -p 5432:5432  -e \ 
-POSTGRES_PASSWORD=password1 -d postgres
+POSTGRES_PASSWORD=<ADD-YOUR-PASSWORD> -d postgres
 ```
+Same password needs to be set in table_metadata.yaml
 
 2. Start the docker api-search
 
 ```bash
 docker run <container id>
 ```
+
+## Table Metadata
+
+Place to store all the config related information
 

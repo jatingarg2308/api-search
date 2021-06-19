@@ -9,11 +9,11 @@ metadata = get_metadata()
 
 def get_connection():
     return psycopg2.connect(
-        host='172.17.0.1',
-        port=5432,
+        host=metadata['db_params']['host_name'],
+        port=metadata['db_params']['port'],
         database = metadata['db_name'],
         user="postgres",
-        password="password1"
+        password=metadata['db_params']['password']
     )
 
 def create_database():
@@ -21,9 +21,9 @@ def create_database():
 
     conn = psycopg2.connect(
         user='postgres',
-        password='password1',
-        host='172.17.0.1',
-        port=5432
+        password=metadata['db_params']['password'],
+        host=metadata['db_params']['host_name'],
+        port=metadata['db_params']['port']
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
@@ -113,9 +113,13 @@ def create_search_query(params):
             tup.extend([f"%{val.lower()}%", f"%{val.lower()}%"])
     
     if temp_query != 'where ':
-        query += temp_query[:-3] + f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {params['page_number']-1};"
+        query +=  + f"{temp_query[:-3]} order by publish_time DESC \
+                     LIMIT {params['results_per_page']} \
+                    OFFSET {(params['page_number']-1)*params['results_per_page']};"
     else:
-        query +=  f"order by publish_time DESC LIMIT {params['results_per_page']} OFFSET {(params['page_number']-1)*params['results_per_page']}"
+        query +=  f"order by publish_time DESC \
+                    LIMIT {params['results_per_page']} \
+                    OFFSET {(params['page_number']-1)*params['results_per_page']}"
     return query, tup
 
 def get_df(params):

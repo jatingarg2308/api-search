@@ -12,6 +12,11 @@ search_query:
 db_name: assignment
 table_name: youtube
 
+db_params:
+  host_name: "172.17.0.1"
+  port: 5432
+  password: xxxxxx
+
 col_metadata:
 - name: video_id
   dtype: VARCHAR(255)
