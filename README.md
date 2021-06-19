@@ -22,8 +22,8 @@ To use the api-search:
 1. start the postgres docker image
 
 ```bash
-docker run --name=demo \
--p 5432:5432  -e \ 
+docker run --name=<DOCKER Container Name> \
+-p <PORT>:5432  -e \ 
 POSTGRES_PASSWORD=<ADD-YOUR-PASSWORD> -d postgres
 ```
 Same password needs to be set in table_metadata.yaml
