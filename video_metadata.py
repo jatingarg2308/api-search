@@ -1,20 +1,13 @@
-import arrow
-import requests
-import json
 import time
+import requests
 import pandas as pd
 
-from flask import Flask, request, jsonify
-from multiprocessing import Process
-
-
-from table import ingestion, get_df, create_database, create_table
+from table import ingestion, create_database, create_table
 from metadata import get_metadata
 
-app = Flask(__name__)
+
 meta = get_metadata()
 KEY_INDEX = 0
-
 
 def get_video_metadata():
     global meta, KEY_INDEX
@@ -53,45 +46,12 @@ def get_video_metadata():
 
 def video_metadata_loop():
     while True:
+        time.sleep(10)
         get_video_metadata()
-        time.sleep(10) 
 
-@app.route('/', methods=['GET'])
-def get_data():
-
-    params = request.json
-    # params = {
-        # "search": "",
-        # "page_number": 2,
-        # "results_per_page": 5
-    # }
-    start_idx = params['results_per_page'] * (params['page_number'] - 1)
-    end_idx = start_idx + params['results_per_page']
-
-    final_df = get_df(params)
     
-    res = {
-        "status_code": 200,
-        "start_idx": start_idx,
-        'end_idx': end_idx,
-        'data': json.loads(final_df.to_json(orient="records"))
-    }
-    return res
-    
-
 
 if __name__ == '__main__':
     create_database()
     create_table()
-    # get_video_metadata()
-    p = Process(target=video_metadata_loop, args= ()) 
-    p.start()
-    app.run(port=5000, use_reloader=False)
-    p.join()
-
-
-
-    
-    
-
-    
+    video_metadata_loop()

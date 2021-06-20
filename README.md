@@ -31,8 +31,14 @@ Same password needs to be set in table_metadata.yaml
 2. Start the docker api-search
 
 ```bash
-docker run <container id>
+docker run -d -p 5000:5000 <container id>
 ```
+
+3. Start Youtube search ingestion process
+```bash
+python video_metadata.py
+```
+
 
 ## Table Metadata
 

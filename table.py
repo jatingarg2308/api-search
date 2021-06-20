@@ -113,13 +113,13 @@ def create_search_query(params):
             tup.extend([f"%{val.lower()}%", f"%{val.lower()}%"])
     
     if temp_query != 'where ':
-        query +=  + f"{temp_query[:-3]} order by publish_time DESC \
+        query +=  f"{temp_query[:-3]} order by publish_time DESC \
                      LIMIT {params['results_per_page']} \
                     OFFSET {(params['page_number']-1)*params['results_per_page']};"
     else:
         query +=  f"order by publish_time DESC \
                     LIMIT {params['results_per_page']} \
-                    OFFSET {(params['page_number']-1)*params['results_per_page']}"
+                    OFFSET {(params['page_number']-1)*params['results_per_page']};"
     return query, tup
 
 def get_df(params):
